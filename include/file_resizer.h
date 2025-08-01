@@ -5,10 +5,12 @@
 #pragma once
 #include "rgb_image.h"
 #include <string>
-#include <unordered_map>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 struct FileResizer {
-    static int resize(const std::string& inputFile, const std::string& outputFile, int scale, const std::string &method);
+    static int resize(const fs::path& inputFile, const fs::path& outputFile, int scale, const std::string &method);
 };
 
 struct MyResizer {

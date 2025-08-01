@@ -16,12 +16,8 @@ Makefile
 *.vcxproj*
 *.sln
 
-out/
-data/2/
-data/3/
-data/4/
+test/
 *.csv
-*.sh
 *.xlsx
 
 **/.DS_Store

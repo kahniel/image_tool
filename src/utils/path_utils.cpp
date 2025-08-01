@@ -5,8 +5,10 @@
 #include "path_utils.h"
 #include <filesystem>
 #include <stdexcept>
-#include <cstdlib>
 #include <mach-o/dyld.h>
+#include <iostream>
+#include <algorithm>
+#include <opencv2/opencv.hpp>
 
 #define PATH_MAX 1024
 
@@ -26,26 +28,65 @@ fs::path getExternalDir() {
     return getExecRootDir() / "external";
 }
 
-fs::path DataOpener::getDir(const int scale) {
-    return getDir() / std::to_string(scale);
-}
-fs::path DataOpener::getDir() {
-    return getExecRootDir() / "data";
-}
-fs::path DataOpener::getImagePath(const std::string& imageName, const int scale) {
-    return getDir(scale) / (imageName + ".png");
-}
-fs::path DataOpener::getImagePath(const std::string& imageName) {
-    return getDir() / (imageName + ".png");
+std::string ImageFileIterator::toLower(const std::string& str) {
+    std::string result = str;
+    std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+    return result;
 }
 
-fs::path OutOpener::getDir(const std::string& imageName, int scale) {
-    return getExecRootDir() / "out" / std::to_string(scale) / imageName;
-}
-fs::path OutOpener::getImagePath(const std::string& imageName, const std::string& method, int scale) {
-    return getDir(imageName, scale) / (method + ".png");
+bool ImageFileIterator::isImageExtension(const std::string& extension) {
+    std::string ext = toLower(extension);
+
+    if (!ext.empty() && ext[0] == '.') {
+        ext = ext.substr(1);
+    }
+    return supportedExtensions.find(ext) != supportedExtensions.end();
 }
 
-fs::path getOutDir() {
-    return getExecRootDir() / "out";
+std::vector<fs::path> ImageFileIterator::getImageFiles(const fs::path& directory) {
+    std::vector<fs::path> imageFiles;
+
+    if (!fs::exists(directory) || !fs::is_directory(directory)) {
+        std::cerr << "Directory does not exist: " << directory << std::endl;
+        return imageFiles;
+    }
+
+    try {
+        for (const auto& entry : fs::directory_iterator(directory)) {
+            if (entry.is_regular_file()) {
+                const auto& path = entry.path();
+                if (isImageExtension(path.extension().string())) {
+                    imageFiles.push_back(path);
+                }
+            }
+        }
+    } catch (const fs::filesystem_error& ex) {
+        std::cerr << "Filesystem error: " << ex.what() << std::endl;
+    }
+
+    std::sort(imageFiles.begin(), imageFiles.end());
+    return imageFiles;
+}
+
+const std::set<std::string> ImageFileIterator::supportedExtensions = {
+    "bmp", "dib",
+    "jpeg", "jpg", "jpe", "jp2",
+    "png",
+    "webp",
+    "pbm", "pgm", "ppm", "pxm", "pnm",
+    "sr", "ras",
+    "exr",
+    "hdr", "pic"
+};
+
+int checkPath(const fs::path& path, const std::string& name, const bool isDir) {
+    if (!fs::exists(path)) {
+        std::cerr << "Incorrect " << name << " path: Given path does not exist" << std::endl;
+        return 1;
+    }
+    if (isDir && !fs::is_directory(path)) {
+        std::cerr << "Incorrect " << name << " path: Given path is not a directory" << std::endl;
+        return 1;
+    }
+    return 0;
 }

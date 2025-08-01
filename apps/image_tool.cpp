@@ -28,8 +28,8 @@ int main(int argc, const char** argv) {
         "my-up", "my-down", "linear", "cubic",
         "lanczos", "edsr", "realesrgan"
     };
-    resize->add_option("-i,--input", inputFile, "Input image path")->required();
-    resize->add_option("-o,--output", outputFile, "Output image path")->required();
+    resize->add_option("-i,--in,--input", inputFile, "Input image path")->required();
+    resize->add_option("-o,--out,--output", outputFile, "Output image path")->required();
     resize->add_option("-s,--scale", scale, "Scale factor")->check(CLI::PositiveNumber);
     resize->add_option("-m,--method", resizeMethod, "Resize method")
           ->check(CLI::IsMember(resizeMethods))

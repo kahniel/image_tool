@@ -1,8 +1,10 @@
 #include "file_resizer.h"
 #include "rgb_image.h"
-#include "path_utils.h"
 #include <iostream>
 #include <string>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 RgbImage* resizeImage(const RgbImage *rgbImage, int scale, const std::string& method) {
     if (scale == 1) {
@@ -32,7 +34,7 @@ RgbImage* resizeImage(const RgbImage *rgbImage, int scale, const std::string& me
     return upsized;
 }
 
-int FileResizer::resize(const std::string& inputFile, const std::string& outputFile, int scale, const std::string &method) {
+int FileResizer::resize(const fs::path& inputFile, const fs::path& outputFile, int scale, const std::string &method) {
     if ((method == "edsr" || method == "realesrgan") && scale > 4) {
         std::cerr << "Unsupported scale for neural resizers: " << scale << std::endl;
         return 1;
@@ -42,13 +44,16 @@ int FileResizer::resize(const std::string& inputFile, const std::string& outputF
         const RgbImage *image = RgbImage::read(inputFile);
 
         image = resizeImage(image, scale, method);
-        std::cout << getExecRootDir() << " " << outputFile << std::endl;
         image->write(outputFile);
 
         delete image;
-    } catch(const std::runtime_error& e) {
-        std::cerr << e.what() << '\n';
+    } catch (const fs::filesystem_error& e) {
+        std::cerr << "Filesystem error: " << e.what() << '\n';
+        return 1;
+    } catch (const std::exception& e) {
+        std::cerr << "Unexpected exception: " << e.what() << '\n';
         return 1;
     }
+
     return 0;
 }

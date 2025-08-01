@@ -4,21 +4,24 @@
 
 #pragma once
 #include <filesystem>
+#include <vector>
+#include <string>
+#include <set>
 
-std::filesystem::path getExecRootDir();
-std::filesystem::path getModelsDir();
-std::filesystem::path getExternalDir();
+namespace fs = std::filesystem;
 
-struct DataOpener {
-    static std::filesystem::path getDir(int scale);
-    static std::filesystem::path getDir();
-    static std::filesystem::path getImagePath(const std::string& imageName, int scale);
-    static std::filesystem::path getImagePath(const std::string& imageName);
+fs::path getExecRootDir();
+fs::path getModelsDir();
+fs::path getExternalDir();
+
+
+class ImageFileIterator {
+    static const std::set<std::string> supportedExtensions;
+
+    static std::string toLower(const std::string& str);
+    static bool isImageExtension(const std::string& extension);
+public:
+    static std::vector<fs::path> getImageFiles(const fs::path& directory);
 };
 
-struct OutOpener {
-    static std::filesystem::path getDir(const std::string& imageName, int scale);
-    static std::filesystem::path getImagePath(const std::string& imageName, const std::string& method, int scale);
-};
-
-std::filesystem::path getOutDir();
+int checkPath(const fs::path& path, const std::string& name, bool isDir);
